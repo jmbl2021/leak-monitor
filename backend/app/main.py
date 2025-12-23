@@ -47,9 +47,15 @@ app = FastAPI(
 
 # Configure CORS
 config = get_config()
+# Allow both localhost and .localdomain access
+allowed_origins = [
+    config.frontend_url,  # http://localhost:3000
+    "http://leak-monitor.localdomain",
+    "https://leak-monitor.localdomain"
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[config.frontend_url],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

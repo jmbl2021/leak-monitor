@@ -49,8 +49,14 @@ docker compose up -d
 
 4. Access the application:
 ```bash
-# Web UI (recommended)
+# Web UI via domain (recommended)
+open http://leak-monitor.localdomain
+
+# Web UI via localhost
 open http://localhost:3000
+
+# Backend API via domain
+curl http://leak-monitor.localdomain/api/health
 
 # Backend API directly
 curl http://localhost:8001/api/health
@@ -60,7 +66,7 @@ open http://localhost:8001/docs
 ```
 
 5. **Configure API Key (for AI features):**
-   - Navigate to http://localhost:3000/settings
+   - Navigate to http://leak-monitor.localdomain/settings (or http://localhost:3000/settings)
    - Enter your Anthropic API key from https://console.anthropic.com/
    - Click "Save API Key" and "Test API Key"
    - Key is stored locally in your browser
@@ -162,6 +168,39 @@ This project uses data from [RansomLook.io](https://www.ransomlook.io), provided
 ## License
 
 MIT License - See [LICENSE](LICENSE) file for details.
+
+## Network Configuration
+
+### Access URLs
+
+**Primary Access (via domain):**
+- Web UI: http://leak-monitor.localdomain
+- API: http://leak-monitor.localdomain/api
+
+**Direct Access (via localhost):**
+- Web UI: http://localhost:3000
+- Backend API: http://localhost:8001/api
+- API Docs: http://localhost:8001/docs
+
+### DNS Configuration
+
+The application is configured with DNS rewrite in AdGuard:
+- **Domain:** leak-monitor.localdomain
+- **IP:** 172.16.0.177
+
+### Reverse Proxy
+
+The application is proxied through Nginx Proxy Manager:
+- **Frontend Container:** leak-monitor-frontend (port 80)
+- **Backend Container:** leak-monitor-backend (port 8000)
+- **Network:** Connected to both `leak-monitor_default` and `homelab` networks
+
+### CORS Configuration
+
+Backend allows requests from:
+- http://localhost:3000
+- http://leak-monitor.localdomain
+- https://leak-monitor.localdomain
 
 ## Security
 
