@@ -177,6 +177,74 @@ async def search_news(
         )
 
 
+@router.post("/8k/batch")
+async def check_8k_batch(
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
+    """Batch check 8-K filings for SEC-regulated victims.
+
+    Does not require API key - uses public SEC data.
+    """
+    # Get SEC-regulated victims without 8-K check
+    filters = VictimFilter(
+        is_sec_regulated=True,
+        review_status=ReviewStatus.REVIEWED,
+        limit=limit
+    )
+
+    victims = await database.list_victims(db, filters)
+
+    # Filter to those with CIK and no 8-K check yet
+    to_check = [v for v in victims if v.sec_cik and v.has_8k_filing is None]
+
+    results = []
+    for victim in to_check:
+        try:
+            result = await check_8k_filing(
+                victim.company_name,
+                victim.sec_cik,
+                victim.post_date.date()
+            )
+
+            if result["found"]:
+                await database.update_8k_correlation(
+                    db,
+                    victim_id=victim.id,
+                    has_8k_filing=True,
+                    sec_8k_date=result.get("filing_date"),
+                    sec_8k_url=result.get("filing_url"),
+                    disclosure_days=result.get("disclosure_days")
+                )
+            else:
+                await database.update_8k_correlation(
+                    db,
+                    victim_id=victim.id,
+                    has_8k_filing=False
+                )
+
+            results.append({
+                "victim_id": str(victim.id),
+                "company_name": victim.company_name,
+                "has_8k_filing": result["found"],
+                "filing_date": result.get("filing_date"),
+                "disclosure_days": result.get("disclosure_days")
+            })
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error checking 8-K for {victim.id}: {e}")
+
+    await db.commit()
+
+    return {
+        "success": True,
+        "checked": len(results),
+        "results": results
+    }
+
+
 @router.post("/8k/{victim_id}")
 async def check_8k(
     victim_id: UUID,
@@ -246,71 +314,3 @@ async def check_8k(
             "victim_id": str(victim_id),
             "error": str(e)
         }
-
-
-@router.post("/8k/batch")
-async def check_8k_batch(
-    limit: int = 10,
-    db: AsyncSession = Depends(get_db)
-):
-    """Batch check 8-K filings for SEC-regulated victims.
-
-    Does not require API key - uses public SEC data.
-    """
-    # Get SEC-regulated victims without 8-K check
-    filters = VictimFilter(
-        is_sec_regulated=True,
-        review_status=ReviewStatus.REVIEWED,
-        limit=limit
-    )
-
-    victims = await database.list_victims(db, filters)
-
-    # Filter to those with CIK and no 8-K check yet
-    to_check = [v for v in victims if v.sec_cik and v.has_8k_filing is None]
-
-    results = []
-    for victim in to_check:
-        try:
-            result = await check_8k_filing(
-                victim.company_name,
-                victim.sec_cik,
-                victim.post_date.date()
-            )
-
-            if result["found"]:
-                await database.update_8k_correlation(
-                    db,
-                    victim_id=victim.id,
-                    has_8k_filing=True,
-                    sec_8k_date=result.get("filing_date"),
-                    sec_8k_url=result.get("filing_url"),
-                    disclosure_days=result.get("disclosure_days")
-                )
-            else:
-                await database.update_8k_correlation(
-                    db,
-                    victim_id=victim.id,
-                    has_8k_filing=False
-                )
-
-            results.append({
-                "victim_id": str(victim.id),
-                "company_name": victim.company_name,
-                "has_8k_filing": result["found"],
-                "filing_date": result.get("filing_date"),
-                "disclosure_days": result.get("disclosure_days")
-            })
-
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error checking 8-K for {victim.id}: {e}")
-
-    await db.commit()
-
-    return {
-        "success": True,
-        "checked": len(results),
-        "results": results
-    }
