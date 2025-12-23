@@ -1,4 +1,15 @@
 services:
+  frontend:
+    build: ./frontend
+    container_name: leak-monitor-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - TZ=America/New_York
+
   backend:
     build: ./backend
     container_name: leak-monitor-backend
