@@ -112,8 +112,8 @@ async def test_get_stats(api_base_url):
         assert response.status_code == 200
         data = response.json()
 
-        assert "total" in data
-        assert "by_status" in data
+        assert "total_victims" in data
+        assert "by_review_status" in data
         assert "by_company_type" in data
         assert "by_group" in data
-        assert isinstance(data["total"], int)
+        assert isinstance(data["total_victims"], int)

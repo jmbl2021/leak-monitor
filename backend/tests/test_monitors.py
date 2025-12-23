@@ -32,9 +32,11 @@ async def test_list_groups(api_base_url):
         assert response.status_code == 200
         data = response.json()
 
-        assert "groups" in data
-        assert isinstance(data["groups"], list)
-        assert len(data["groups"]) > 0
+        # API returns a list of group names directly
+        assert isinstance(data, list)
+        assert len(data) > 0
+        # Verify akira group exists (we have test data for it)
+        assert "akira" in data
 
 
 @pytest.mark.asyncio
@@ -76,7 +78,7 @@ async def test_poll_monitor(api_base_url):
             data = response.json()
 
             assert "monitor_id" in data
-            assert "victims_inserted" in data
-            assert "victims_skipped" in data
-            assert isinstance(data["victims_inserted"], int)
-            assert isinstance(data["victims_skipped"], int)
+            assert "inserted" in data
+            assert "skipped" in data
+            assert isinstance(data["inserted"], int)
+            assert isinstance(data["skipped"], int)

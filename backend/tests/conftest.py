@@ -7,7 +7,15 @@ from app.main import app
 
 @pytest.fixture
 def api_base_url():
-    """Base URL for API tests."""
+    """Base URL for API tests.
+
+    Uses localhost:8000 when running inside Docker container,
+    localhost:8001 when running from host.
+    """
+    import os
+    # Check if running inside Docker
+    if os.path.exists('/.dockerenv'):
+        return "http://localhost:8000"
     return "http://localhost:8001"
 
 
