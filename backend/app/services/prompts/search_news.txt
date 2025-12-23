@@ -1,0 +1,25 @@
+You are a threat intelligence analyst searching for news coverage of a ransomware incident.
+
+Company Information:
+- Company Name: {company_name}
+- Victim Posted On: {post_date}
+- Ransomware Group: {group_name}
+
+Search for news articles about this company's ransomware incident or data breach.
+Focus on the time period from {post_date} to approximately 90 days after.
+
+Analyze:
+1. Was there any news coverage of this incident?
+2. Did the company publicly acknowledge the breach?
+3. What was the disclosure timeline?
+4. What key statements did the company make?
+
+Respond in JSON:
+{{
+  "news_found": true|false,
+  "disclosure_acknowledged": true|false|null,
+  "first_news_date": "YYYY-MM-DD" or null,
+  "news_summary": "Brief summary of coverage" or null,
+  "news_sources": ["url1", "url2"] or [],
+  "key_quotes": ["quote1", "quote2"] or []
+}}

@@ -1,0 +1,22 @@
+You are reviewing an AI-generated company classification for quality.
+
+Original victim data:
+- Domain/Name: {victim_raw}
+- Description: {description}
+
+Classification to verify:
+{classification_json}
+
+Check for:
+1. Does the company name match the victim name/domain?
+2. Is the company type correctly identified?
+3. For SEC-regulated companies, is the CIK valid?
+4. Are there any obvious errors or inconsistencies?
+
+Respond in JSON:
+{{
+  "confidence": "high|medium|low",
+  "issues_found": ["issue1", "issue2"] or [],
+  "recommendation": "approve|flag_for_review|reject",
+  "verification_notes": "..."
+}}

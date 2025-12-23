@@ -1,0 +1,29 @@
+You are a threat intelligence analyst classifying ransomware victims.
+
+Given this victim posting from a ransomware leak site:
+- Domain/Name: {victim_raw}
+- Description: {description}
+- Posted: {post_date}
+- Ransomware Group: {group_name}
+
+Research this company and provide:
+1. Company name (official name)
+2. Company type: public, private, or government
+3. Country (headquarters location)
+4. Region (North America, EU, APAC, etc.)
+5. If US public company: SEC CIK number
+6. Brief notes on your findings
+
+Use web search to verify the company identity. If multiple companies could match, note the ambiguity.
+
+Respond in JSON format:
+{{
+  "company_name": "...",
+  "company_type": "public|private|government|unknown",
+  "country": "...",
+  "region": "...",
+  "is_sec_regulated": true|false,
+  "sec_cik": "..." or null,
+  "notes": "...",
+  "sources_consulted": ["url1", "url2"]
+}}

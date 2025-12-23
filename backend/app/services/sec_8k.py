@@ -219,3 +219,51 @@ def get_sec8k_tracker() -> SEC8KTracker:
     if _tracker is None:
         _tracker = SEC8KTracker()
     return _tracker
+
+
+async def check_8k_filing(
+    company_name: str,
+    sec_cik: str,
+    post_date: date
+) -> dict:
+    """Check for SEC 8-K filing for a company.
+
+    Args:
+        company_name: Company name to search for
+        sec_cik: SEC Central Index Key (not currently used but kept for compatibility)
+        post_date: Date the victim was posted on ransomware leak site
+
+    Returns:
+        Dictionary with:
+            - found: bool - Whether a matching 8-K was found
+            - filing_date: Optional[date] - Date of 8-K filing
+            - filing_url: Optional[str] - URL to filing details
+            - disclosure_days: Optional[int] - Days between post_date and filing_date
+    """
+    tracker = get_sec8k_tracker()
+
+    # Fetch incidents from tracker
+    incidents = await tracker.fetch_incidents()
+
+    # Find matching incident
+    match = tracker.find_match(company_name, incidents)
+
+    if match:
+        # Calculate disclosure days (filing date - post date)
+        # Positive means they disclosed AFTER the leak
+        # Negative means they disclosed BEFORE (or same day as) the leak
+        disclosure_days = (match.disclosure_date - post_date).days
+
+        return {
+            "found": True,
+            "filing_date": match.disclosure_date,
+            "filing_url": match.detail_url,
+            "disclosure_days": disclosure_days
+        }
+    else:
+        return {
+            "found": False,
+            "filing_date": None,
+            "filing_url": None,
+            "disclosure_days": None
+        }

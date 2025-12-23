@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_config
 from .core.database import init_db, close_db
 from .services import close_ransomlook_client
-from .api import health, victims, monitors
+from .api import health, victims, monitors, analysis
 
 # Configure logging
 logging.basicConfig(
@@ -59,6 +59,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(victims.router, prefix="/api/victims", tags=["victims"])
 app.include_router(monitors.router, prefix="/api/monitors", tags=["monitors"])
+app.include_router(analysis.router, prefix="/api/analyze", tags=["analysis"])
 
 # Root endpoint
 @app.get("/")
