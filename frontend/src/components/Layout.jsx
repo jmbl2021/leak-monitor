@@ -7,6 +7,7 @@ function Layout({ children }) {
     { name: 'Dashboard', path: '/', icon: '📊' },
     { name: 'Victims', path: '/victims', icon: '🎯' },
     { name: 'Monitors', path: '/monitors', icon: '👁️' },
+    { name: 'Settings', path: '/settings', icon: '⚙️' },
   ];
 
   const isActive = (path) => {

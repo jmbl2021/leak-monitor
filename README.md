@@ -47,14 +47,23 @@ cp .env.example .env
 docker compose up -d
 ```
 
-4. Access the API:
+4. Access the application:
 ```bash
-# Health check
+# Web UI (recommended)
+open http://localhost:3000
+
+# Backend API directly
 curl http://localhost:8001/api/health
 
 # API documentation
 open http://localhost:8001/docs
 ```
+
+5. **Configure API Key (for AI features):**
+   - Navigate to http://localhost:3000/settings
+   - Enter your Anthropic API key from https://console.anthropic.com/
+   - Click "Save API Key" and "Test API Key"
+   - Key is stored locally in your browser
 
 ## API Endpoints
 
@@ -133,13 +142,22 @@ docker compose -f docker-compose.dev.yml up
 
 This project uses data from [RansomLook.io](https://www.ransomlook.io), provided under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license. Attribution is automatically included in all exports.
 
-## Roadmap
+## Implementation Status
 
 - [x] **Phase 1:** Backend scaffold & Docker setup
-- [ ] **Phase 2:** Core API endpoints (victims, monitors)
-- [ ] **Phase 3:** AI classification pipeline
-- [ ] **Phase 4:** React frontend
-- [ ] **Phase 5:** Polish & deployment
+- [x] **Phase 2:** Core API endpoints (victims, monitors)
+- [x] **Phase 3:** AI classification pipeline
+- [x] **Phase 4:** React frontend with Settings page
+- [x] **Testing:** Comprehensive test suite (21 tests, 100% pass rate)
+
+## Future Enhancements
+
+- [ ] Real-time notifications for new victims
+- [ ] Multi-user authentication and access control
+- [ ] Advanced analytics and trending
+- [ ] Automated weekly/monthly reports
+- [ ] Integration with SIEM platforms
+- [ ] Historical trend analysis
 
 ## License
 
