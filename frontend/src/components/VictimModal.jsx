@@ -54,8 +54,12 @@ function VictimModal({ victim, onClose, onUpdate }) {
 
     try {
       setLoading(true);
-      await analysisApi.classify(victim.id);
-      alert('AI classification completed');
+      const result = await analysisApi.classify(victim.id);
+      if (result[0]?.success) {
+        alert('Classification completed: ' + (result[0].company_name || 'Unknown'));
+      } else {
+        alert('Classification failed: ' + (result[0]?.error || 'Unknown error'));
+      }
       onUpdate();
     } catch (err) {
       alert('Failed to classify: ' + err.message);
@@ -69,8 +73,12 @@ function VictimModal({ victim, onClose, onUpdate }) {
 
     try {
       setLoading(true);
-      await analysisApi.searchNews(victim.id);
-      alert('News search completed');
+      const result = await analysisApi.searchNews(victim.id);
+      if (result.success) {
+        alert('News search completed: ' + (result.news_found ? 'Coverage found' : 'No coverage found'));
+      } else {
+        alert('News search failed: ' + (result.error || 'Unknown error'));
+      }
       onUpdate();
     } catch (err) {
       alert('Failed to search news: ' + err.message);
@@ -82,8 +90,12 @@ function VictimModal({ victim, onClose, onUpdate }) {
   const handleCheck8K = async () => {
     try {
       setLoading(true);
-      await analysisApi.check8k(victim.id);
-      alert('8-K check completed');
+      const result = await analysisApi.check8k(victim.id);
+      if (result.success) {
+        alert('8-K check completed: ' + (result.found ? 'Filing found' : 'No filing found'));
+      } else {
+        alert('8-K check failed: ' + (result.error || 'Unknown error'));
+      }
       onUpdate();
     } catch (err) {
       alert('Failed to check 8-K: ' + err.message);

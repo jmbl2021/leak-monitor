@@ -52,7 +52,7 @@ async def classify_victim(victim: Victim, api_key: str) -> Dict[str, Any]:
         logger.info(f"Classifying victim: {victim.victim_raw}")
 
         response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=2048,
             messages=[{
                 "role": "user",
@@ -79,7 +79,7 @@ async def classify_victim(victim: Victim, api_key: str) -> Dict[str, Any]:
         )
 
         verify_response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=1024,
             messages=[{
                 "role": "user",

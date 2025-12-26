@@ -57,7 +57,7 @@ async def search_news_for_victim(victim: Victim, api_key: str) -> Dict[str, Any]
 
         # Use extended thinking for better analysis
         response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=3072,
             messages=[{
                 "role": "user",
