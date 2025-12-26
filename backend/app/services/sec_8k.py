@@ -62,7 +62,7 @@ class SEC8KTracker:
                     timeout=30,
                     follow_redirects=True,
                     headers={
-                        "User-Agent": "CTI-Monitor/1.1 (SEC 8-K Research)"
+                        "User-Agent": "SEC-8K-Research/1.0 (Python httpx)"
                     }
                 )
                 response.raise_for_status()

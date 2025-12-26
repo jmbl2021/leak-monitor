@@ -1,0 +1,72 @@
+# Code Scanner Configuration for leak-monitor
+# This file customizes scanning for public release preparation
+#
+# Philosophy: Scanner should produce a RELEASE CHECKLIST, not a clean pass.
+# Only ignore true false positives, not things that need sanitizing.
+
+profile: public-release
+
+fail_on: high
+
+# Patterns to ignore (TRUE false positives only)
+ignore:
+  # Files to skip entirely
+  files:
+    # Internal documentation (not published in public release)
+    - "CLAUDE.md"
+    - "session-*.md"
+    - "*.example"
+    - "*.sample"
+
+    # Test fixtures may contain intentional "bad" patterns
+    - "tests/fixtures/*"
+
+    # Lock files contain hashes that look like secrets
+    - "package-lock.json"
+    - "yarn.lock"
+    - "pnpm-lock.yaml"
+
+    # Scanner config references patterns being ignored
+    - "scanner.yaml"
+
+    # Environment file is gitignored (local deployment only)
+    - ".env"
+
+    # Build files inherently contain npm/package manager commands
+    - "Dockerfile"
+    - "**/Dockerfile"
+    - "package.json"
+    - "**/package.json"
+
+  # Text patterns to ignore in matches (true false positives)
+  patterns:
+    # Project's own name - inherently public
+    - "leak-monitor"
+    - "leak_monitor"
+    - "leakmon"
+
+    # npm package manager commands (not Nginx Proxy Manager)
+    - "npm install"
+    - "npm run"
+    - "npm start"
+    - "npm test"
+    - "npm build"
+    - "npm ci"
+    - "npmjs.com"
+    - "npm_config"
+
+    # Common example/placeholder values
+    - "example.com"
+    - "example.org"
+    - "localhost"
+
+    # Generic Docker service names (not infrastructure-specific)
+    - "db:5432"
+    - "frontend:80"
+    - "backend:8000"
+
+# NOT ignored (will be flagged as release checklist items):
+# - localdomain references (internal DNS)
+# - Private IPs (172.16.x.x)
+# - sibling service names (cti-monitor)
+# - bare "npm" word (too broad)

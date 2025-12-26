@@ -49,16 +49,10 @@ docker compose up -d
 
 4. Access the application:
 ```bash
-# Web UI via domain (recommended)
-open http://leak-monitor.localdomain
-
-# Web UI via localhost
+# Web UI
 open http://localhost:3000
 
-# Backend API via domain
-curl http://leak-monitor.localdomain/api/health
-
-# Backend API directly
+# Backend API
 curl http://localhost:8001/api/health
 
 # API documentation
@@ -66,7 +60,7 @@ open http://localhost:8001/docs
 ```
 
 5. **Configure API Key (for AI features):**
-   - Navigate to http://leak-monitor.localdomain/settings (or http://localhost:3000/settings)
+   - Navigate to http://localhost:3000/settings
    - Enter your Anthropic API key from https://console.anthropic.com/
    - Click "Save API Key" and "Test API Key"
    - Key is stored locally in your browser
@@ -98,7 +92,8 @@ See `.env.example` for all configuration options.
 
 **Optional:**
 - `LOG_LEVEL` - Logging level (default: INFO)
-- `FRONTEND_URL` - Frontend URL for CORS (default: http://localhost:3000)
+- `FRONTEND_URL` - Frontend URL (default: http://localhost:3000)
+- `CORS_ORIGINS` - Comma-separated allowed origins (default: http://localhost:3000)
 - `ANTHROPIC_API_KEY` - Server-side AI key (users can also provide via UI)
 
 ### API Key Management
@@ -173,34 +168,28 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ### Access URLs
 
-**Primary Access (via domain):**
-- Web UI: http://leak-monitor.localdomain
-- API: http://leak-monitor.localdomain/api
+- **Web UI:** http://localhost:3000
+- **Backend API:** http://localhost:8001/api
+- **API Docs:** http://localhost:8001/docs
 
-**Direct Access (via localhost):**
-- Web UI: http://localhost:3000
-- Backend API: http://localhost:8001/api
-- API Docs: http://localhost:8001/docs
+### Custom Domain (Optional)
 
-### DNS Configuration
+To access via a custom domain:
 
-The application is configured with DNS rewrite in AdGuard:
-- **Domain:** leak-monitor.localdomain
-- **IP:** 172.16.0.177
-
-### Reverse Proxy
-
-The application is proxied through Nginx Proxy Manager:
-- **Frontend Container:** leak-monitor-frontend (port 80)
-- **Backend Container:** leak-monitor-backend (port 8000)
-- **Network:** Connected to both `leak-monitor_default` and `homelab` networks
+1. Configure DNS to point your domain to your server
+2. Set up a reverse proxy (nginx, Caddy, Traefik, etc.):
+   - Frontend: proxy to `localhost:3000`
+   - Backend API: proxy `/api` to `localhost:8001`
+3. Add your domain to `CORS_ORIGINS` in `.env`:
+   ```env
+   CORS_ORIGINS=http://localhost:3000,https://your-domain.example.com
+   ```
+4. Rebuild the backend: `docker compose up -d --build backend`
 
 ### CORS Configuration
 
-Backend allows requests from:
-- http://localhost:3000
-- http://leak-monitor.localdomain
-- https://leak-monitor.localdomain
+CORS origins are configured via the `CORS_ORIGINS` environment variable.
+Default allows only `http://localhost:3000`.
 
 ## Security
 

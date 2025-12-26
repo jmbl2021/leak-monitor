@@ -27,6 +27,7 @@ class Config:
 
     # CORS
     frontend_url: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000"  # Comma-separated origins
 
     # Optional: Pre-configured Anthropic API key
     # Users can also provide this via the UI
@@ -50,6 +51,7 @@ class Config:
             log_level=os.environ.get("LOG_LEVEL", "INFO"),
             export_dir=os.environ.get("EXPORT_DIR", "/app/exports"),
             frontend_url=os.environ.get("FRONTEND_URL", "http://localhost:3000"),
+            cors_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000"),
             anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
         )
 
