@@ -20,6 +20,7 @@ services:
       - DATABASE_URL=postgresql://leakmon:${DB_PASSWORD}@db:5432/leak_monitor
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
       - TZ=America/New_York
     depends_on:
       db:
