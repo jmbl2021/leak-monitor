@@ -56,4 +56,16 @@
   .badge-unknown {
     @apply bg-gray-100 text-gray-800;
   }
+
+  .badge-active {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .badge-flagged {
+    @apply bg-orange-100 text-orange-800;
+  }
+
+  .badge-deleted {
+    @apply bg-red-100 text-red-800 line-through;
+  }
 }

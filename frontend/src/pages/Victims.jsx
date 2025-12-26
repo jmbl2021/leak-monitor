@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import { victimsApi } from '../api';
+import { victimsApi, analysisApi, monitorsApi } from '../api';
+import VictimModal from '../components/VictimModal';
 
 function Victims() {
   const [victims, setVictims] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedVictim, setSelectedVictim] = useState(null);
+  const [showHidden, setShowHidden] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [filters, setFilters] = useState({
     review_status: '',
     company_type: '',
@@ -14,7 +19,8 @@ function Victims() {
 
   useEffect(() => {
     loadVictims();
-  }, [filters]);
+    loadGroups();
+  }, [filters, showHidden]);
 
   const loadVictims = async () => {
     try {
@@ -24,6 +30,7 @@ function Victims() {
       if (filters.company_type) params.company_type = filters.company_type;
       if (filters.group_name) params.group_name = filters.group_name;
       params.limit = filters.limit;
+      params.include_hidden = showHidden;
 
       const data = await victimsApi.list(params);
       setVictims(data);
@@ -32,6 +39,15 @@ function Victims() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGroups = async () => {
+    try {
+      const data = await monitorsApi.getGroups();
+      setGroups(data);
+    } catch (err) {
+      console.error('Failed to load groups:', err);
     }
   };
 
@@ -55,6 +71,58 @@ function Victims() {
     }
   };
 
+  const handleClassifyAll = async () => {
+    if (!confirm('Classify all pending victims? This will use API credits.')) return;
+
+    try {
+      setLoading(true);
+      await analysisApi.classifyAllPending(50);
+      alert('Batch classification completed');
+      loadVictims();
+    } catch (err) {
+      alert('Classification failed: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      alert('Please select victims to delete');
+      return;
+    }
+
+    if (!confirm(`Delete ${selectedIds.length} selected victims? They can be restored later.`)) return;
+
+    try {
+      setLoading(true);
+      await victimsApi.bulkDelete(selectedIds);
+      alert(`Deleted ${selectedIds.length} victims`);
+      setSelectedIds([]);
+      loadVictims();
+    } catch (err) {
+      alert('Bulk delete failed: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === victims.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(victims.map(v => v.id));
+    }
+  };
+
+  const handleSelectVictim = (id) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(i => i !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -65,18 +133,27 @@ function Victims() {
             Browse and manage ransomware victims
           </p>
         </div>
-        <button
-          onClick={handleExport}
-          className="btn btn-primary"
-        >
-          📥 Export to Excel
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleClassifyAll}
+            className="btn btn-secondary"
+            disabled={loading}
+          >
+            🤖 Classify All Pending
+          </button>
+          <button
+            onClick={handleExport}
+            className="btn btn-primary"
+          >
+            📥 Export to Excel
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="card">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Review Status
@@ -111,15 +188,20 @@ function Victims() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Group Name
+              Ransomware Group
             </label>
-            <input
-              type="text"
+            <select
               value={filters.group_name}
               onChange={(e) => setFilters({ ...filters, group_name: e.target.value })}
-              placeholder="e.g., akira"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+            >
+              <option value="">All Groups</option>
+              {groups.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -138,6 +220,21 @@ function Victims() {
             </select>
           </div>
         </div>
+
+        {/* Show Hidden Toggle */}
+        <div className="pt-4 border-t">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={showHidden}
+              onChange={(e) => setShowHidden(e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              Show flagged and deleted victims
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* Results */}
@@ -145,7 +242,20 @@ function Victims() {
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             Results ({victims.length})
+            {selectedIds.length > 0 && (
+              <span className="text-sm text-gray-500 ml-2">
+                ({selectedIds.length} selected)
+              </span>
+            )}
           </h3>
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="btn btn-danger text-sm"
+            >
+              🗑️ Delete Selected ({selectedIds.length})
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -165,6 +275,14 @@ function Victims() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
+                  <th className="px-3 py-2 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length === victims.length && victims.length > 0}
+                      onChange={handleSelectAll}
+                      className="cursor-pointer"
+                    />
+                  </th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                     Company/Victim
                   </th>
@@ -186,11 +304,22 @@ function Victims() {
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                     SEC
                   </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {victims.map((victim) => (
                   <tr key={victim.id} className="hover:bg-gray-50">
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(victim.id)}
+                        onChange={() => handleSelectVictim(victim.id)}
+                        className="cursor-pointer"
+                      />
+                    </td>
                     <td className="px-3 py-3">
                       <div className="text-sm font-medium text-gray-900">
                         {victim.company_name || victim.victim_raw}
@@ -201,8 +330,10 @@ function Victims() {
                         </div>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-600">
-                      {victim.group_name}
+                    <td className="px-3 py-3">
+                      <span className="badge badge-secondary text-xs">
+                        {victim.group_name}
+                      </span>
                     </td>
                     <td className="px-3 py-3 text-sm">
                       {victim.company_type ? (
@@ -220,9 +351,16 @@ function Victims() {
                       {new Date(victim.post_date).toLocaleDateString()}
                     </td>
                     <td className="px-3 py-3 text-sm">
-                      <span className={`badge badge-${victim.review_status}`}>
-                        {victim.review_status}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`badge badge-${victim.review_status}`}>
+                          {victim.review_status}
+                        </span>
+                        {victim.lifecycle_status !== 'active' && (
+                          <span className={`badge badge-${victim.lifecycle_status}`}>
+                            {victim.lifecycle_status}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-3 text-sm text-center">
                       {victim.is_sec_regulated ? (
@@ -231,6 +369,14 @@ function Victims() {
                         <span className="text-gray-300">-</span>
                       )}
                     </td>
+                    <td className="px-3 py-3">
+                      <button
+                        onClick={() => setSelectedVictim(victim)}
+                        className="btn btn-secondary text-xs"
+                      >
+                        View
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -238,6 +384,18 @@ function Victims() {
           </div>
         )}
       </div>
+
+      {/* Victim Modal */}
+      {selectedVictim && (
+        <VictimModal
+          victim={selectedVictim}
+          onClose={() => setSelectedVictim(null)}
+          onUpdate={() => {
+            loadVictims();
+            setSelectedVictim(null);
+          }}
+        />
+      )}
     </div>
   );
 }

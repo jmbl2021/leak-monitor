@@ -5,7 +5,7 @@ from datetime import datetime, date
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 
-from .orm import CompanyType, ReviewStatus
+from .orm import CompanyType, ReviewStatus, LifecycleStatus
 
 
 # --- Monitor Schemas ---
@@ -159,6 +159,9 @@ class Victim(BaseModel):
     # Review workflow
     review_status: ReviewStatus
     notes: Optional[str]
+    # Lifecycle management
+    lifecycle_status: LifecycleStatus
+    flag_reason: Optional[str]
     created_at: datetime
     updated_at: datetime
 
@@ -191,6 +194,10 @@ class VictimFilter(BaseModel):
         default=None,
         description="Filter posts on or before this date"
     )
+    include_hidden: bool = Field(
+        default=False,
+        description="Include flagged and deleted victims"
+    )
     limit: int = Field(
         default=50,
         description="Maximum number of results",
@@ -201,6 +208,17 @@ class VictimFilter(BaseModel):
         default=0,
         description="Number of results to skip",
         ge=0
+    )
+
+
+class FlagRequest(BaseModel):
+    """Request to flag a victim as junk."""
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    reason: Optional[str] = Field(
+        default=None,
+        description="Reason for flagging as junk",
+        max_length=255
     )
 
 

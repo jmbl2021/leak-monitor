@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..api.deps import get_db
 from ..core import database
 from ..models import (
-    Victim, VictimReview, VictimFilter, StatsResponse
+    Victim, VictimReview, VictimFilter, FlagRequest, StatsResponse
 )
 from ..services import create_victims_export
 
@@ -24,6 +24,7 @@ async def list_victims(
     is_sec_regulated: bool = None,
     start_date: str = None,
     end_date: str = None,
+    include_hidden: bool = False,
     limit: int = 50,
     offset: int = 0,
     db: AsyncSession = Depends(get_db)
@@ -40,6 +41,7 @@ async def list_victims(
         is_sec_regulated=is_sec_regulated,
         start_date=date.fromisoformat(start_date) if start_date else None,
         end_date=date.fromisoformat(end_date) if end_date else None,
+        include_hidden=include_hidden,
         limit=limit,
         offset=offset
     )
@@ -140,3 +142,68 @@ async def export_victims(
         "count": len(victims),
         "message": f"Exported {len(victims)} victims to {filepath.name}"
     }
+
+
+@router.delete("/{victim_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_victim(
+    victim_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """Soft delete a victim."""
+    success = await database.delete_victim(db, victim_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Victim {victim_id} not found"
+        )
+    await db.commit()
+
+
+@router.post("/{victim_id}/flag", status_code=status.HTTP_200_OK)
+async def flag_victim(
+    victim_id: UUID,
+    request: FlagRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Flag a victim as junk."""
+    success = await database.flag_victim(db, victim_id, request.reason)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Victim {victim_id} not found"
+        )
+    await db.commit()
+    return {"success": True, "message": f"Flagged victim {victim_id}"}
+
+
+@router.post("/{victim_id}/restore", status_code=status.HTTP_200_OK)
+async def restore_victim(
+    victim_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """Restore a deleted or flagged victim."""
+    success = await database.restore_victim(db, victim_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Victim {victim_id} not found"
+        )
+    await db.commit()
+    return {"success": True, "message": f"Restored victim {victim_id}"}
+
+
+@router.post("/bulk-delete", status_code=status.HTTP_200_OK)
+async def bulk_delete_victims(
+    victim_ids: List[UUID],
+    db: AsyncSession = Depends(get_db)
+):
+    """Bulk soft delete victims."""
+    if not victim_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="victim_ids list cannot be empty"
+        )
+
+    count = await database.bulk_delete_victims(db, victim_ids)
+    await db.commit()
+    return {"success": True, "deleted": count, "message": f"Deleted {count} victims"}

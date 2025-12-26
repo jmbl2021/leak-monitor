@@ -7,6 +7,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Enum types
 CREATE TYPE company_type AS ENUM ('public', 'private', 'government', 'unknown');
 CREATE TYPE review_status AS ENUM ('pending', 'reviewed');
+CREATE TYPE lifecycle_status AS ENUM ('active', 'flagged', 'deleted');
 
 -- Monitors table - tracks active monitoring tasks
 CREATE TABLE monitors (
@@ -73,6 +74,10 @@ CREATE TABLE victims (
     review_status review_status NOT NULL DEFAULT 'pending',
     notes TEXT,
 
+    -- Lifecycle management (soft delete, flagging)
+    lifecycle_status lifecycle_status NOT NULL DEFAULT 'active',
+    flag_reason VARCHAR(255),
+
     -- Metadata
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -86,6 +91,8 @@ CREATE INDEX idx_victims_group_name ON victims(group_name);
 CREATE INDEX idx_victims_post_date ON victims(post_date);
 CREATE INDEX idx_victims_review_status ON victims(review_status);
 CREATE INDEX idx_victims_company_type ON victims(company_type);
+CREATE INDEX idx_victims_lifecycle_status ON victims(lifecycle_status);
+CREATE INDEX idx_victims_active ON victims(id) WHERE lifecycle_status = 'active';
 CREATE INDEX idx_monitors_active ON monitors(is_active) WHERE is_active = true;
 
 -- Update timestamp trigger

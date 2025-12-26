@@ -1,9 +1,9 @@
 """Data models for leak-monitor."""
 
-from .orm import Base, MonitorORM, VictimORM, CompanyType, ReviewStatus
+from .orm import Base, MonitorORM, VictimORM, CompanyType, ReviewStatus, LifecycleStatus
 from .schemas import (
     Monitor, MonitorCreate,
-    Victim, VictimCreate, VictimReview, VictimFilter,
+    Victim, VictimCreate, VictimReview, VictimFilter, FlagRequest,
     AIClassificationRequest, AIClassificationResult, NewsSearchResult,
     HealthStatus, StatsResponse
 )
@@ -15,6 +15,7 @@ __all__ = [
     "VictimORM",
     "CompanyType",
     "ReviewStatus",
+    "LifecycleStatus",
     # Schemas
     "Monitor",
     "MonitorCreate",
@@ -22,6 +23,7 @@ __all__ = [
     "VictimCreate",
     "VictimReview",
     "VictimFilter",
+    "FlagRequest",
     "AIClassificationRequest",
     "AIClassificationResult",
     "NewsSearchResult",

@@ -18,7 +18,7 @@ from ..config import get_config
 from ..models import (
     Base, MonitorORM, VictimORM,
     MonitorCreate, Monitor, VictimCreate, Victim, VictimReview, VictimFilter,
-    ReviewStatus, CompanyType, HealthStatus
+    ReviewStatus, CompanyType, LifecycleStatus, HealthStatus
 )
 
 logger = logging.getLogger(__name__)
@@ -235,6 +235,11 @@ async def list_victims(session: AsyncSession, filters: VictimFilter) -> list[Vic
 
     # Apply filters
     conditions = []
+
+    # Hide flagged/deleted by default
+    if not filters.include_hidden:
+        conditions.append(VictimORM.lifecycle_status == LifecycleStatus.ACTIVE)
+
     if filters.group_name:
         conditions.append(VictimORM.group_name == filters.group_name.lower())
     if filters.review_status:
@@ -396,6 +401,80 @@ async def update_news_correlation(
     return Victim.model_validate(victim)
 
 
+async def delete_victim(session: AsyncSession, victim_id: UUID) -> bool:
+    """Soft delete a victim (set lifecycle_status to deleted)."""
+    result = await session.execute(
+        select(VictimORM).where(VictimORM.id == victim_id)
+    )
+    victim = result.scalar_one_or_none()
+
+    if not victim:
+        return False
+
+    victim.lifecycle_status = LifecycleStatus.DELETED
+    await session.flush()
+
+    logger.info(f"Deleted victim {victim_id}: {victim.victim_raw}")
+    return True
+
+
+async def flag_victim(session: AsyncSession, victim_id: UUID, reason: Optional[str] = None) -> bool:
+    """Flag a victim as junk."""
+    result = await session.execute(
+        select(VictimORM).where(VictimORM.id == victim_id)
+    )
+    victim = result.scalar_one_or_none()
+
+    if not victim:
+        return False
+
+    victim.lifecycle_status = LifecycleStatus.FLAGGED
+    victim.flag_reason = reason
+    await session.flush()
+
+    logger.info(f"Flagged victim {victim_id}: {victim.victim_raw} - Reason: {reason or 'N/A'}")
+    return True
+
+
+async def restore_victim(session: AsyncSession, victim_id: UUID) -> bool:
+    """Restore a deleted or flagged victim to active status."""
+    result = await session.execute(
+        select(VictimORM).where(VictimORM.id == victim_id)
+    )
+    victim = result.scalar_one_or_none()
+
+    if not victim:
+        return False
+
+    victim.lifecycle_status = LifecycleStatus.ACTIVE
+    victim.flag_reason = None
+    await session.flush()
+
+    logger.info(f"Restored victim {victim_id}: {victim.victim_raw}")
+    return True
+
+
+async def bulk_delete_victims(session: AsyncSession, victim_ids: list[UUID]) -> int:
+    """Bulk soft delete victims."""
+    if not victim_ids:
+        return 0
+
+    result = await session.execute(
+        select(VictimORM).where(VictimORM.id.in_(victim_ids))
+    )
+    victims = result.scalars().all()
+
+    count = 0
+    for victim in victims:
+        victim.lifecycle_status = LifecycleStatus.DELETED
+        count += 1
+
+    await session.flush()
+
+    logger.info(f"Bulk deleted {count} victims")
+    return count
+
+
 # --- Statistics ---
 
 async def get_stats(session: AsyncSession) -> dict:
@@ -408,51 +487,65 @@ async def get_stats(session: AsyncSession) -> dict:
     )
     active_monitors = result.scalar_one()
 
-    # Total victims
+    # Total victims (active only)
     result = await session.execute(
-        select(func.count()).select_from(VictimORM)
+        select(func.count()).select_from(VictimORM).where(
+            VictimORM.lifecycle_status == LifecycleStatus.ACTIVE
+        )
     )
     total_victims = result.scalar_one()
 
-    # Pending reviews
+    # Pending reviews (active only)
     result = await session.execute(
         select(func.count()).select_from(VictimORM).where(
-            VictimORM.review_status == ReviewStatus.PENDING
+            and_(
+                VictimORM.review_status == ReviewStatus.PENDING,
+                VictimORM.lifecycle_status == LifecycleStatus.ACTIVE
+            )
         )
     )
     pending_reviews = result.scalar_one()
 
-    # Reviewed count
+    # Reviewed count (active only)
     result = await session.execute(
         select(func.count()).select_from(VictimORM).where(
-            VictimORM.review_status == ReviewStatus.REVIEWED
+            and_(
+                VictimORM.review_status == ReviewStatus.REVIEWED,
+                VictimORM.lifecycle_status == LifecycleStatus.ACTIVE
+            )
         )
     )
     reviewed_count = result.scalar_one()
 
-    # Victims by review status
+    # Victims by review status (active only)
     result = await session.execute(
         select(
             VictimORM.review_status,
             func.count()
+        ).where(
+            VictimORM.lifecycle_status == LifecycleStatus.ACTIVE
         ).group_by(VictimORM.review_status)
     )
     by_status = {row[0].value: row[1] for row in result.all()}
 
-    # Victims by company type
+    # Victims by company type (active only)
     result = await session.execute(
         select(
             VictimORM.company_type,
             func.count()
+        ).where(
+            VictimORM.lifecycle_status == LifecycleStatus.ACTIVE
         ).group_by(VictimORM.company_type)
     )
     by_type = {row[0].value: row[1] for row in result.all()}
 
-    # Victims by group (top 10)
+    # Victims by group (top 10, active only)
     result = await session.execute(
         select(
             VictimORM.group_name,
             func.count()
+        ).where(
+            VictimORM.lifecycle_status == LifecycleStatus.ACTIVE
         ).group_by(VictimORM.group_name)
         .order_by(func.count().desc())
         .limit(10)

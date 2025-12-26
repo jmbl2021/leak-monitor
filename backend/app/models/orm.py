@@ -34,6 +34,13 @@ class ReviewStatus(str, Enum):
     REVIEWED = "reviewed"
 
 
+class LifecycleStatus(str, Enum):
+    """Lifecycle status for soft delete and flagging."""
+    ACTIVE = "active"
+    FLAGGED = "flagged"
+    DELETED = "deleted"
+
+
 # --- SQLAlchemy ORM Models ---
 
 class MonitorORM(Base):
@@ -121,6 +128,19 @@ class VictimORM(Base):
         default=ReviewStatus.PENDING
     )
     notes = Column(Text, nullable=True)
+
+    # Lifecycle management (soft delete, flagging)
+    lifecycle_status = Column(
+        SQLEnum(
+            LifecycleStatus,
+            name="lifecycle_status",
+            create_type=False,
+            values_callable=lambda x: [e.value for e in x]
+        ),
+        nullable=False,
+        default=LifecycleStatus.ACTIVE
+    )
+    flag_reason = Column(String(255), nullable=True)
 
     # Metadata
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)

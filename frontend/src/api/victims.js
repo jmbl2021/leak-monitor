@@ -40,4 +40,28 @@ export const victimsApi = {
     });
     return response.data;
   },
+
+  // Delete victim (soft delete)
+  delete: async (id) => {
+    const response = await client.delete(`/victims/${id}`);
+    return response.data;
+  },
+
+  // Flag victim as junk
+  flag: async (id, reason = null) => {
+    const response = await client.post(`/victims/${id}/flag`, { reason });
+    return response.data;
+  },
+
+  // Restore deleted/flagged victim
+  restore: async (id) => {
+    const response = await client.post(`/victims/${id}/restore`);
+    return response.data;
+  },
+
+  // Bulk delete victims
+  bulkDelete: async (victimIds) => {
+    const response = await client.post('/victims/bulk-delete', { victim_ids: victimIds });
+    return response.data;
+  },
 };
