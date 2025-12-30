@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code when working with the leak-monitor project.
 
+## Agent Identity
+
+**On startup, identify yourself:**
+
+1. Check the working directory to determine which machine you're on:
+
+   | Working Directory Pattern | Agent ID | Identity File |
+   |---------------------------|----------|---------------|
+   | `/home/jaymb/Projects/*` | **windows-cli** | `/home/jaymb/Projects/.claude-agent-identity.yaml` |
+   | `/home/jay/Projects/*` | **portableserver** | `/home/jay/Projects/.claude-agent-identity.yaml` |
+   | `C:\Users\jaymb\Projects\*` | **windows-desktop** | `C:\Users\jaymb\Projects\.claude-agent-identity.yaml` |
+
+2. Read your identity file for full context (MCP servers, infrastructure IPs, etc.)
+
+3. For infrastructure documentation, reference: `~/Projects/homelab/CLAUDE.md`
+
 ## Project Overview
 
 **Leak Monitor** is a ransomware victim tracking and intelligence system that monitors breach disclosure data and correlates it with SEC 8-K cybersecurity incident filings.
