@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { victimsApi, healthApi } from '../api';
+import { victimsApi, healthApi, monitorsApi } from '../api';
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
   const [health, setHealth] = useState(null);
+  const [monitors, setMonitors] = useState([]);
   const [recentVictims, setRecentVictims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,20 +17,54 @@ function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsData, healthData, victimsData] = await Promise.all([
+      const [statsData, healthData, victimsData, monitorsData] = await Promise.all([
         victimsApi.getStats(),
         healthApi.check(),
-        victimsApi.list({ limit: 5 })
+        victimsApi.list({ limit: 5 }),
+        monitorsApi.list()
       ]);
       setStats(statsData);
       setHealth(healthData);
       setRecentVictims(victimsData);
+      setMonitors(monitorsData);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // Get the most recent poll time from active monitors
+  const getLastCheckedTime = () => {
+    const activeMonitors = monitors.filter(m => m.is_active && m.last_poll_time);
+    if (activeMonitors.length === 0) return null;
+
+    // Find the most recent poll time
+    const mostRecent = activeMonitors.reduce((latest, monitor) => {
+      const pollTime = new Date(monitor.last_poll_time);
+      return pollTime > latest ? pollTime : latest;
+    }, new Date(0));
+
+    return mostRecent;
+  };
+
+  // Format relative time (e.g., "5 minutes ago", "2 hours ago")
+  const formatRelativeTime = (date) => {
+    if (!date || date.getTime() === 0) return 'Never';
+
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+  };
+
+  const lastCheckedTime = getLastCheckedTime();
 
   if (loading) {
     return (
@@ -72,7 +107,7 @@ function Dashboard() {
               </span>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-4">
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-gray-500">Database</p>
               <p className="text-lg font-semibold text-gray-900">{health.database}</p>
@@ -84,6 +119,17 @@ function Dashboard() {
             <div>
               <p className="text-sm text-gray-500">Total Victims</p>
               <p className="text-lg font-semibold text-gray-900">{health.total_victims}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Last Checked</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {formatRelativeTime(lastCheckedTime)}
+              </p>
+              {lastCheckedTime && lastCheckedTime.getTime() !== 0 && (
+                <p className="text-xs text-gray-400">
+                  {lastCheckedTime.toLocaleString()}
+                </p>
+              )}
             </div>
           </div>
         </div>
