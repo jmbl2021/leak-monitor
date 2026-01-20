@@ -377,13 +377,22 @@ function Victims() {
                       Country
                     </th>
                     <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Ticker
+                    </th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Parent Co.
+                    </th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                       Date
                     </th>
                     <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
                     <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      SEC
+                      SEC Reg
+                    </th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      8-K Filed
                     </th>
                     <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                       AI
@@ -441,6 +450,26 @@ function Victims() {
                         <td className="px-2 py-2 text-sm text-gray-600">
                           {victim.country || '-'}
                         </td>
+                        <td className="px-2 py-2 text-sm">
+                          {victim.stock_ticker ? (
+                            <span className="font-mono text-blue-600 font-semibold">
+                              {victim.stock_ticker}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                        <td className="px-2 py-2 text-sm text-gray-600">
+                          {victim.parent_company ? (
+                            <span className="text-xs" title={victim.parent_company}>
+                              {victim.parent_company.length > 20
+                                ? victim.parent_company.substring(0, 20) + '...'
+                                : victim.parent_company}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
                         <td className="px-2 py-2 text-sm text-gray-600">
                           {new Date(victim.post_date).toLocaleDateString()}
                         </td>
@@ -464,6 +493,22 @@ function Victims() {
                                 <span className="text-xs text-gray-500">{victim.sec_cik}</span>
                               )}
                             </div>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                        <td className="px-2 py-2 text-sm">
+                          {victim.has_8k_filing === true ? (
+                            <div className="flex flex-col items-center">
+                              <span className="text-green-600" title="8-K Filing Found">✓</span>
+                              {victim.sec_8k_date && (
+                                <span className="text-xs text-gray-500">
+                                  {new Date(victim.sec_8k_date).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          ) : victim.has_8k_filing === false ? (
+                            <span className="text-red-400" title="No 8-K Filing Found">✗</span>
                           ) : (
                             <span className="text-gray-300">-</span>
                           )}
@@ -493,7 +538,7 @@ function Victims() {
                       {/* Expanded Row */}
                       {expandedRows.has(victim.id) && (
                         <tr key={`${victim.id}-expanded`} className="bg-blue-50">
-                          <td colSpan="11" className="px-4 py-3">
+                          <td colSpan="14" className="px-4 py-3">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               {/* Left Column */}
                               <div className="space-y-2">

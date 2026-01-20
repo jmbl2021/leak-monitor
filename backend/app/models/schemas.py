@@ -95,6 +95,11 @@ class VictimReview(BaseModel):
         description="Country name or ISO code",
         max_length=100
     )
+    stock_ticker: Optional[str] = Field(
+        default=None,
+        description="Stock ticker symbol (e.g., AAPL, MSFT)",
+        max_length=20
+    )
     is_sec_regulated: bool = Field(
         default=False,
         description="Is this company subject to SEC disclosure rules?"
@@ -138,6 +143,7 @@ class Victim(BaseModel):
     company_type: CompanyType
     region: Optional[str]
     country: Optional[str]
+    stock_ticker: Optional[str]
     is_sec_regulated: bool
     sec_cik: Optional[str]
     is_subsidiary: bool
@@ -231,6 +237,16 @@ class AIClassificationRequest(BaseModel):
         description="List of victim IDs to classify",
         min_length=1,
         max_length=10
+    )
+
+
+class ClassifyPendingRequest(BaseModel):
+    """Request to classify pending victims using AI."""
+    limit: int = Field(
+        default=50,
+        description="Maximum number of pending victims to classify",
+        ge=1,
+        le=100
     )
 
 

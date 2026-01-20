@@ -9,6 +9,7 @@ function VictimModal({ victim, onClose, onUpdate }) {
     company_type: 'unknown',
     region: '',
     country: '',
+    stock_ticker: '',
     is_sec_regulated: false,
     sec_cik: '',
     is_subsidiary: false,
@@ -24,6 +25,7 @@ function VictimModal({ victim, onClose, onUpdate }) {
         company_type: victim.company_type || 'unknown',
         region: victim.region || '',
         country: victim.country || '',
+        stock_ticker: victim.stock_ticker || '',
         is_sec_regulated: victim.is_sec_regulated || false,
         sec_cik: victim.sec_cik || '',
         is_subsidiary: victim.is_subsidiary || false,
@@ -156,33 +158,36 @@ function VictimModal({ victim, onClose, onUpdate }) {
   if (!victim) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 my-8">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex-1">
-            <h3 className="text-2xl font-bold text-gray-900">{victim.victim_raw}</h3>
-            <div className="mt-2 flex gap-2 flex-wrap">
-              <span className="badge badge-secondary">{victim.group_name}</span>
-              <span className={`badge badge-${victim.review_status}`}>
-                {victim.review_status}
-              </span>
-              <span className={`badge badge-${victim.lifecycle_status}`}>
-                {victim.lifecycle_status}
-              </span>
-              {victim.post_date && (
-                <span className="text-sm text-gray-500">
-                  Posted: {new Date(victim.post_date).toLocaleDateString()}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto p-4" onClick={onClose}>
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative" onClick={(e) => e.stopPropagation()}>
+        {/* Header - Sticky */}
+        <div className="sticky top-0 bg-white z-10 pb-4 mb-2 border-b border-gray-200 -mt-6 -mx-6 px-6 pt-6">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-gray-900">{victim.victim_raw}</h3>
+              <div className="mt-2 flex gap-2 flex-wrap">
+                <span className="badge badge-secondary">{victim.group_name}</span>
+                <span className={`badge badge-${victim.review_status}`}>
+                  {victim.review_status}
                 </span>
-              )}
+                <span className={`badge badge-${victim.lifecycle_status}`}>
+                  {victim.lifecycle_status}
+                </span>
+                {victim.post_date && (
+                  <span className="text-sm text-gray-500">
+                    Posted: {new Date(victim.post_date).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center text-3xl font-light flex-shrink-0 ml-4"
+              title="Close (or click outside)"
+            >
+              ×
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
         </div>
 
         <form onSubmit={handleSave} className="space-y-6">
@@ -230,6 +235,20 @@ function VictimModal({ victim, onClose, onUpdate }) {
                   <option value="private">Private</option>
                   <option value="government">Government</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Stock Ticker
+                </label>
+                <input
+                  type="text"
+                  value={formData.stock_ticker}
+                  onChange={(e) => setFormData({ ...formData, stock_ticker: e.target.value.toUpperCase() })}
+                  disabled={!isEditMode}
+                  placeholder="e.g., AAPL, MSFT"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
+                />
               </div>
 
               <div>
