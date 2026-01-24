@@ -304,9 +304,22 @@ async def update_8k_correlation(
     has_8k_filing: bool,
     sec_8k_date: Optional[date] = None,
     sec_8k_url: Optional[str] = None,
+    sec_8k_source: Optional[str] = None,
+    sec_8k_item: Optional[str] = None,
     disclosure_days: Optional[int] = None
 ) -> Optional[Victim]:
-    """Update a victim with SEC 8-K correlation data."""
+    """Update a victim with SEC 8-K correlation data.
+
+    Args:
+        session: Database session
+        victim_id: Victim UUID
+        has_8k_filing: Whether an 8-K was found
+        sec_8k_date: Filing date
+        sec_8k_url: URL to filing
+        sec_8k_source: Data source ("edgar" or "tracker")
+        sec_8k_item: SEC Item number ("1.05", "7.01/8.01", etc.)
+        disclosure_days: Days between leak post and 8-K filing
+    """
     result = await session.execute(
         select(VictimORM).where(VictimORM.id == victim_id)
     )
@@ -318,12 +331,14 @@ async def update_8k_correlation(
     victim.has_8k_filing = has_8k_filing
     victim.sec_8k_date = sec_8k_date
     victim.sec_8k_url = sec_8k_url
+    victim.sec_8k_source = sec_8k_source
+    victim.sec_8k_item = sec_8k_item
     victim.disclosure_days = disclosure_days
 
     await session.flush()
     await session.refresh(victim)
 
-    logger.info(f"Updated 8-K correlation for {victim_id}: has_8k={has_8k_filing}")
+    logger.info(f"Updated 8-K correlation for {victim_id}: has_8k={has_8k_filing}, source={sec_8k_source}, item={sec_8k_item}")
     return Victim.model_validate(victim)
 
 

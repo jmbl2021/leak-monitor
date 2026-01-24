@@ -92,6 +92,7 @@ class VictimORM(Base):
     # SEC/Regulatory fields
     is_sec_regulated = Column(Boolean, default=False)
     sec_cik = Column(String(20), nullable=True)
+    stock_ticker = Column(String(20), nullable=True)
 
     # Subsidiary tracking
     is_subsidiary = Column(Boolean, default=False)
@@ -104,6 +105,8 @@ class VictimORM(Base):
     has_8k_filing = Column(Boolean, nullable=True, default=None)
     sec_8k_date = Column(Date, nullable=True)
     sec_8k_url = Column(String(500), nullable=True)
+    sec_8k_source = Column(String(20), nullable=True)  # "edgar" or "tracker"
+    sec_8k_item = Column(String(20), nullable=True)    # "1.05", "7.01", etc.
     disclosure_days = Column(Integer, nullable=True)
 
     # AI Analysis fields (new for leak-monitor)

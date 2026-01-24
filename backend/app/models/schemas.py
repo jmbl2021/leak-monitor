@@ -153,6 +153,8 @@ class Victim(BaseModel):
     has_8k_filing: Optional[bool]
     sec_8k_date: Optional[date]
     sec_8k_url: Optional[str]
+    sec_8k_source: Optional[str]  # "edgar" or "tracker"
+    sec_8k_item: Optional[str]    # "1.05", "7.01", etc.
     disclosure_days: Optional[int]
     # AI analysis fields
     confidence_score: Optional[str]

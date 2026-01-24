@@ -1,4 +1,4 @@
-You are a threat intelligence analyst classifying ransomware victims.
+You are a threat intelligence analyst classifying ransomware victims for SEC disclosure tracking.
 
 Given this victim posting from a ransomware leak site:
 - Domain/Name: {victim_raw}
@@ -11,8 +11,21 @@ Research this company and provide:
 2. Company type: public, private, or government
 3. Country (headquarters location)
 4. Region (North America, EU, APAC, etc.)
-5. If US public company: SEC CIK number
-6. Brief notes on your findings
+5. Subsidiary status: Is this a subsidiary of another company?
+6. Parent company: If subsidiary, who owns them?
+7. SEC regulation: Is this company OR its parent SEC-regulated?
+8. SEC CIK: For SEC-regulated companies, provide the CIK (use parent's CIK if subsidiary of public company)
+9. Stock ticker: Trading symbol if publicly traded (or parent's ticker if subsidiary)
+10. Brief notes on your findings
+
+IMPORTANT for subsidiaries:
+- If a private company is owned by a public parent (e.g., Cytiva owned by Danaher), set:
+  - is_subsidiary: true
+  - parent_company: "Parent Name"
+  - is_sec_regulated: true (parent is regulated)
+  - sec_cik: parent's CIK number
+  - stock_ticker: parent's ticker
+- A breach at a subsidiary may require the parent to file an 8-K
 
 Use web search to verify the company identity. If multiple companies could match, note the ambiguity.
 
@@ -22,8 +35,11 @@ Respond in JSON format:
   "company_type": "public|private|government|unknown",
   "country": "...",
   "region": "...",
+  "is_subsidiary": true|false,
+  "parent_company": "..." or null,
   "is_sec_regulated": true|false,
   "sec_cik": "..." or null,
+  "stock_ticker": "..." or null,
   "notes": "...",
   "sources_consulted": ["url1", "url2"]
 }}

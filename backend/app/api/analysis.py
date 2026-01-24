@@ -72,9 +72,8 @@ async def classify_victims(
                 is_sec_regulated=classification.get("is_sec_regulated", False)
             )
 
-            # Also update region if provided
-            if classification.get("region") and updated:
-                # Use review_victim to set region
+            # Update additional fields via review_victim
+            if updated:
                 from ..models import VictimReview
                 review = VictimReview(
                     company_name=classification.get("company_name"),
@@ -83,6 +82,9 @@ async def classify_victims(
                     country=classification.get("country"),
                     is_sec_regulated=classification.get("is_sec_regulated", False),
                     sec_cik=classification.get("sec_cik"),
+                    stock_ticker=classification.get("stock_ticker"),
+                    is_subsidiary=classification.get("is_subsidiary", False),
+                    parent_company=classification.get("parent_company"),
                     notes=f"AI classified with {classification['confidence']} confidence"
                 )
                 await database.review_victim(db, victim_id, review)
@@ -214,6 +216,8 @@ async def check_8k_batch(
                     has_8k_filing=True,
                     sec_8k_date=result.get("filing_date"),
                     sec_8k_url=result.get("filing_url"),
+                    sec_8k_source=result.get("source"),
+                    sec_8k_item=result.get("item"),
                     disclosure_days=result.get("disclosure_days")
                 )
             else:
@@ -228,6 +232,8 @@ async def check_8k_batch(
                 "company_name": victim.company_name,
                 "has_8k_filing": result["found"],
                 "filing_date": result.get("filing_date"),
+                "source": result.get("source"),
+                "item": result.get("item"),
                 "disclosure_days": result.get("disclosure_days")
             })
 
@@ -277,13 +283,15 @@ async def check_8k(
         )
 
         if result["found"]:
-            # Update database
+            # Update database with all fields
             await database.update_8k_correlation(
                 db,
                 victim_id=victim_id,
                 has_8k_filing=True,
                 sec_8k_date=result.get("filing_date"),
                 sec_8k_url=result.get("filing_url"),
+                sec_8k_source=result.get("source"),
+                sec_8k_item=result.get("item"),
                 disclosure_days=result.get("disclosure_days")
             )
         else:
@@ -301,7 +309,11 @@ async def check_8k(
             "has_8k_filing": result["found"],
             "filing_date": result.get("filing_date"),
             "filing_url": result.get("filing_url"),
-            "disclosure_days": result.get("disclosure_days")
+            "source": result.get("source"),
+            "item": result.get("item"),
+            "disclosure_days": result.get("disclosure_days"),
+            "edgar_result": result.get("edgar_result"),
+            "tracker_result": result.get("tracker_result")
         }
 
     except Exception as e:
