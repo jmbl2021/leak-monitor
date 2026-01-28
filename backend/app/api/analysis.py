@@ -69,7 +69,9 @@ async def classify_victims(
                 company_name=classification.get("company_name"),
                 company_type=company_type,
                 country=classification.get("country"),
-                is_sec_regulated=classification.get("is_sec_regulated", False)
+                is_sec_regulated=classification.get("is_sec_regulated", False),
+                healthcare_classification=classification.get("healthcare_classification", "none"),
+                healthcare_blurb=classification.get("healthcare_blurb")
             )
 
             # Update additional fields via review_victim
@@ -85,6 +87,8 @@ async def classify_victims(
                     stock_ticker=classification.get("stock_ticker"),
                     is_subsidiary=classification.get("is_subsidiary", False),
                     parent_company=classification.get("parent_company"),
+                    healthcare_classification=classification.get("healthcare_classification", "none"),
+                    healthcare_blurb=classification.get("healthcare_blurb"),
                     notes=f"AI classified with {classification['confidence']} confidence"
                 )
                 await database.review_victim(db, victim_id, review)
@@ -99,6 +103,8 @@ async def classify_victims(
                 company_type=company_type,
                 country=classification.get("country"),
                 is_sec_regulated=classification.get("is_sec_regulated"),
+                healthcare_classification=classification.get("healthcare_classification"),
+                healthcare_blurb=classification.get("healthcare_blurb"),
                 ai_notes=classification["ai_notes"]
             ))
         else:

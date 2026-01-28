@@ -17,6 +17,11 @@ Research this company and provide:
 8. SEC CIK: For SEC-regulated companies, provide the CIK (use parent's CIK if subsidiary of public company)
 9. Stock ticker: Trading symbol if publicly traded (or parent's ticker if subsidiary)
 10. Brief notes on your findings
+11. Healthcare classification: Is this company related to healthcare?
+    - "none" = Not a healthcare company
+    - "direct" = Is a healthcare company (hospitals, insurance, medical devices, pharma, biotech, etc.)
+    - "subsidiary" = Owns or is parent of healthcare companies
+12. Healthcare blurb: One sentence describing the company and its healthcare relevance (for export reports)
 
 IMPORTANT for subsidiaries:
 - If a private company is owned by a public parent (e.g., Cytiva owned by Danaher), set:
@@ -41,5 +46,7 @@ Respond in JSON format:
   "sec_cik": "..." or null,
   "stock_ticker": "..." or null,
   "notes": "...",
+  "healthcare_classification": "none|direct|subsidiary",
+  "healthcare_blurb": "..." or null,
   "sources_consulted": ["url1", "url2"]
 }}

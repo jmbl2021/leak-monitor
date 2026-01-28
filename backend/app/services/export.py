@@ -53,6 +53,9 @@ COLUMNS = [
     ("8-K Filed", 10),
     ("8-K Date", 12),
     ("Disclosure Days", 14),
+    # Healthcare columns
+    ("Healthcare", 12),
+    ("Healthcare Blurb", 50),
     # Remaining columns
     ("Subsidiary", 10),
     ("Parent Company", 25),
@@ -155,6 +158,9 @@ def _add_data_table(ws: Worksheet, victims: list[Victim], start_row: int) -> Non
         sec_8k_date_str = victim.sec_8k_date.strftime("%Y-%m-%d") if victim.sec_8k_date else ""
         disclosure_days_str = str(victim.disclosure_days) if victim.disclosure_days is not None else ""
 
+        # Format healthcare classification for display
+        healthcare_display = (victim.healthcare_classification or "none").title()
+
         row_data = [
             victim.post_date.strftime("%Y-%m-%d") if victim.post_date else "",
             victim.group_name,
@@ -169,6 +175,9 @@ def _add_data_table(ws: Worksheet, victims: list[Victim], start_row: int) -> Non
             filed_8k,
             sec_8k_date_str,
             disclosure_days_str,
+            # Healthcare columns
+            healthcare_display,
+            victim.healthcare_blurb or "",
             # Remaining columns
             "Yes" if victim.is_subsidiary else "No",
             victim.parent_company or "",
@@ -180,7 +189,7 @@ def _add_data_table(ws: Worksheet, victims: list[Victim], start_row: int) -> Non
         for col_idx, value in enumerate(row_data, start=1):
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
             cell.border = THIN_BORDER
-            cell.alignment = Alignment(vertical="center", wrap_text=(col_idx == 17))  # Wrap notes
+            cell.alignment = Alignment(vertical="center", wrap_text=(col_idx in (14, 19)))  # Wrap healthcare blurb and notes
 
             # Conditional formatting for 8-K disclosure timing (column 12 = Disclosure Days)
             if col_idx == 12 and victim.disclosure_days is not None:

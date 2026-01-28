@@ -288,6 +288,8 @@ async def review_victim(session: AsyncSession, victim_id: UUID, review: VictimRe
     victim.is_subsidiary = review.is_subsidiary
     victim.parent_company = review.parent_company
     victim.has_adr = review.has_adr
+    victim.healthcare_classification = review.healthcare_classification or "none"
+    victim.healthcare_blurb = review.healthcare_blurb
     victim.notes = review.notes
     victim.review_status = ReviewStatus.REVIEWED
 
@@ -350,7 +352,9 @@ async def update_ai_classification(
     company_name: Optional[str] = None,
     company_type: Optional[CompanyType] = None,
     country: Optional[str] = None,
-    is_sec_regulated: Optional[bool] = None
+    is_sec_regulated: Optional[bool] = None,
+    healthcare_classification: Optional[str] = None,
+    healthcare_blurb: Optional[str] = None
 ) -> Optional[Victim]:
     """Update a victim with AI classification data."""
     result = await session.execute(
@@ -373,6 +377,10 @@ async def update_ai_classification(
         victim.country = country
     if is_sec_regulated is not None:
         victim.is_sec_regulated = is_sec_regulated
+    if healthcare_classification is not None:
+        victim.healthcare_classification = healthcare_classification
+    if healthcare_blurb is not None:
+        victim.healthcare_blurb = healthcare_blurb
 
     # Auto-mark as reviewed if high confidence
     if confidence_score == "high":

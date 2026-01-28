@@ -86,13 +86,13 @@ class VictimORM(Base):
         nullable=False,
         default=CompanyType.UNKNOWN
     )
-    region = Column(String(50), nullable=True)
+    region = Column(String(100), nullable=True)
     country = Column(String(100), nullable=True)
 
     # SEC/Regulatory fields
     is_sec_regulated = Column(Boolean, default=False)
     sec_cik = Column(String(20), nullable=True)
-    stock_ticker = Column(String(20), nullable=True)
+    stock_ticker = Column(String(100), nullable=True)
 
     # Subsidiary tracking
     is_subsidiary = Column(Boolean, default=False)
@@ -117,6 +117,10 @@ class VictimORM(Base):
     news_sources = Column(JSONB, nullable=True)
     first_news_date = Column(Date, nullable=True)
     disclosure_acknowledged = Column(Boolean, nullable=True, default=None)
+
+    # Healthcare classification
+    healthcare_classification = Column(String(20), nullable=False, default="none")
+    healthcare_blurb = Column(Text, nullable=True)
 
     # Review workflow
     # CRITICAL: values_callable ensures lowercase values sent to PostgreSQL

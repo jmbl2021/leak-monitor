@@ -109,6 +109,8 @@ async def classify_victim(victim: Victim, api_key: str) -> Dict[str, Any]:
             "is_sec_regulated": classification.get("is_sec_regulated", False),
             "sec_cik": classification.get("sec_cik"),
             "stock_ticker": classification.get("stock_ticker"),
+            "healthcare_classification": classification.get("healthcare_classification", "none"),
+            "healthcare_blurb": classification.get("healthcare_blurb"),
             "confidence": verification.get("confidence", "medium"),
             "ai_notes": f"{classification.get('notes', '')}\\n\\nVerification: {verification.get('verification_notes', '')}",
             "issues_found": verification.get("issues_found", []),

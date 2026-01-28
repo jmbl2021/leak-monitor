@@ -4,6 +4,7 @@ from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..api.deps import get_db
@@ -115,6 +116,7 @@ async def export_victims(
     """Export victims to Excel.
 
     Only exports REVIEWED victims to ensure data completeness.
+    Returns the Excel file directly for download.
     """
     from ..models.orm import ReviewStatus
 
@@ -136,12 +138,12 @@ async def export_victims(
     # Create export
     filepath = create_victims_export(victims, filename=filename, title=title)
 
-    return {
-        "success": True,
-        "filepath": str(filepath),
-        "count": len(victims),
-        "message": f"Exported {len(victims)} victims to {filepath.name}"
-    }
+    # Return file for download
+    return FileResponse(
+        path=filepath,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=filepath.name
+    )
 
 
 @router.delete("/{victim_id}", status_code=status.HTTP_204_NO_CONTENT)

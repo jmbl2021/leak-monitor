@@ -88,7 +88,7 @@ class VictimReview(BaseModel):
     region: Optional[str] = Field(
         default=None,
         description="Geographic region (e.g., 'North America', 'EU', 'APAC')",
-        max_length=50
+        max_length=100
     )
     country: Optional[str] = Field(
         default=None,
@@ -97,8 +97,8 @@ class VictimReview(BaseModel):
     )
     stock_ticker: Optional[str] = Field(
         default=None,
-        description="Stock ticker symbol (e.g., AAPL, MSFT)",
-        max_length=20
+        description="Stock ticker symbol(s) (e.g., AAPL, MSFT, or multiple for dual-listed)",
+        max_length=100
     )
     is_sec_regulated: bool = Field(
         default=False,
@@ -121,6 +121,14 @@ class VictimReview(BaseModel):
     has_adr: bool = Field(
         default=False,
         description="Foreign company with American Depositary Receipts?"
+    )
+    healthcare_classification: Optional[str] = Field(
+        default="none",
+        description="Healthcare classification: none, direct (is healthcare company), subsidiary (owns healthcare companies)"
+    )
+    healthcare_blurb: Optional[str] = Field(
+        default=None,
+        description="Company description + healthcare relevance for export"
     )
     notes: Optional[str] = Field(
         default=None,
@@ -164,6 +172,9 @@ class Victim(BaseModel):
     news_sources: Optional[List[str]]
     first_news_date: Optional[date]
     disclosure_acknowledged: Optional[bool]
+    # Healthcare classification
+    healthcare_classification: Optional[str]
+    healthcare_blurb: Optional[str]
     # Review workflow
     review_status: ReviewStatus
     notes: Optional[str]
@@ -261,6 +272,8 @@ class AIClassificationResult(BaseModel):
     company_type: Optional[CompanyType] = None
     country: Optional[str] = None
     is_sec_regulated: Optional[bool] = None
+    healthcare_classification: Optional[str] = None  # none, direct, subsidiary
+    healthcare_blurb: Optional[str] = None
     ai_notes: Optional[str] = None
     error: Optional[str] = None
 
